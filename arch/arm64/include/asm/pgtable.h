@@ -18,6 +18,9 @@
 
 #include <asm/bug.h>
 #include <asm/proc-fns.h>
+#ifdef CONFIG_N0KZ_ATTRIBUTES
+#include <linux/n0kz_attributes.h>
+#endif
 
 #include <asm/bug.h>
 #include <asm/memory.h>
@@ -156,6 +159,12 @@ static inline pte_t set_pte_bit(pte_t pte, pgprot_t prot)
 static inline pte_t pte_mkwrite(pte_t pte)
 {
 	pte = set_pte_bit(pte, __pgprot(PTE_WRITE));
+#ifdef CONFIG_N0KZ_ATTRIBUTES
+	if (n0kz_data.avoid_dirty_pte == 1) {
+		if (pte_sw_dirty(pte))
+			return pte;
+	}
+#endif
 	if (pte_sw_dirty(pte))
 		pte = clear_pte_bit(pte, __pgprot(PTE_RDONLY));
 	return pte;

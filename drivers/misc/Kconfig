@@ -4,6 +4,23 @@
 
 menu "Misc devices"
 
+config N0KZ_ATTRIBUTES
+	bool "N0KZ attributes (kgsl/avoid-pte/bg-blocklist for kernel managers)"
+	default n
+	help
+	  Exposes /sys/kernel/n0kz_attributes/ for N0Kontzzz
+	  and compatible kernel managers. Includes the oom_adj
+	  background-app hook and the pte_mkwrite dirty-PTE path.
+
+config FORCE_FAST_CHARGE
+	bool "Force USB fast charge (900mA on SDP)"
+	default n
+	help
+	  Exposes /sys/kernel/fast_charge/force_fast_charge.
+	  Forces 900mA on dumb USB ports. USB-spec violation,
+	  use with caution.
+
+
 config SPI_XIAOMI_TP
         bool
         depends on SPI

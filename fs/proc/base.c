@@ -104,6 +104,24 @@
 
 #include "../../lib/kstrtox.h"
 
+#ifdef CONFIG_N0KZ_ATTRIBUTES
+#include <linux/n0kz_attributes.h>
+struct task_kill_info {
+	struct task_struct *task;
+	struct work_struct work;
+};
+
+static void proc_kill_task(struct work_struct *work)
+{
+	struct task_kill_info *kinfo = container_of(work, typeof(*kinfo), work);
+	struct task_struct *task = kinfo->task;
+
+	send_sig(SIGKILL, task, 0);
+	put_task_struct(task);
+	kfree(kinfo);
+}
+#endif
+
 /* NOTE:
  *	Implementing inode permission operations in /proc is almost
  *	certainly an error.  Permission checks need to happen during
@@ -1121,6 +1139,22 @@ static int __set_oom_adj(struct file *file, int oom_adj, bool legacy)
 err_unlock:
 	mutex_unlock(&oom_adj_mutex);
 	put_task_struct(task);
+#ifdef CONFIG_N0KZ_ATTRIBUTES
+	/* Kill user-listed background apps when pushed deep to background */
+	if (!err && oom_adj >= 700) {
+		if (n0kz_comm_blocked(task->comm)) {
+			struct task_kill_info *kinfo;
+
+			kinfo = kmalloc(sizeof(*kinfo), GFP_KERNEL);
+			if (kinfo) {
+				get_task_struct(task);
+				kinfo->task = task;
+				INIT_WORK(&kinfo->work, proc_kill_task);
+				schedule_work(&kinfo->work);
+			}
+		}
+	}
+#endif
 	return err;
 }
 

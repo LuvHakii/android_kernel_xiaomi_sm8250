@@ -14,6 +14,9 @@
 #include <linux/pmic-voter.h>
 #include <linux/of_batterydata.h>
 #include <linux/ktime.h>
+#ifdef CONFIG_FORCE_FAST_CHARGE
+#include <linux/fastchg.h>
+#endif
 #include "smb5-lib-munch.h"
 #include "smb5-reg.h"
 #include "schgm-flash.h"
@@ -1824,6 +1827,11 @@ static int set_sdp_current(struct smb_charger *chg, int icl_ua)
 		break;
 	case USBIN_500MA:
 		/* USB 2.0 500mA */
+#ifdef CONFIG_FORCE_FAST_CHARGE
+		if (force_fast_charge)
+			icl_options = USB51_MODE_BIT | CFG_USB3P0_SEL_BIT;
+		else
+#endif
 		icl_options = USB51_MODE_BIT;
 		break;
 	case USBIN_900MA:

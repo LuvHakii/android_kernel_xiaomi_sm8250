@@ -546,6 +546,47 @@ static DEVICE_ATTR(partial_diff_data, (S_IRUGO | S_IWUSR | S_IWGRP),
 
 static DEVICE_ATTR(resolution_factor, 0644, resolution_factor_show, NULL);
 
+static ssize_t bump_sample_rate_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct xiaomi_touch_pdata *pdata = dev_get_drvdata(dev);
+
+	return snprintf(buf, PAGE_SIZE, "%d\n", pdata->bump_sample_rate);
+}
+
+static ssize_t bump_sample_rate_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	struct xiaomi_touch_pdata *pdata = dev_get_drvdata(dev);
+	struct xiaomi_touch_interface *touch_data = pdata->touch_data;
+	int input;
+	int ret;
+
+	ret = sscanf(buf, "%d", &input);
+
+	if (ret < 0)
+		return -EINVAL;
+
+	if (input) {
+		pdata->bump_sample_rate = true;
+		pdata->set_update = true;
+		touch_data->setModeValue(0, 1);
+		touch_data->setModeValue(1, 1);
+		touch_data->setModeValue(3, 34);
+		touch_data->setModeValue(2, 99);
+		touch_data->setModeValue(7, 0);
+	} else {
+		pdata->bump_sample_rate = false;
+		pdata->set_update = false;
+		touch_data->resetMode(0);
+	}
+
+	return count;
+}
+
+static DEVICE_ATTR(bump_sample_rate, (S_IRUGO | S_IWUSR | S_IWGRP),
+		bump_sample_rate_show, bump_sample_rate_store);
+
 static struct attribute *touch_attr_group[] = {
 	&dev_attr_palm_sensor.attr,
 	&dev_attr_p_sensor.attr,
@@ -558,6 +599,7 @@ static struct attribute *touch_attr_group[] = {
 	&dev_attr_partial_diff_data.attr,
 #endif
 	&dev_attr_resolution_factor.attr,
+	&dev_attr_bump_sample_rate.attr,
 #ifdef CONFIG_TOUCHSCREEN_NEW_PEN_CONNECT_STRATEGY
 	&dev_attr_pen_connect_strategy.attr,
 #endif // CONFIG_TOUCHSCREEN_NEW_PEN_CONNECT_STRATEGY
