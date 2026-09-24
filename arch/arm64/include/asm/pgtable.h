@@ -18,9 +18,6 @@
 
 #include <asm/bug.h>
 #include <asm/proc-fns.h>
-#ifdef CONFIG_N0KZ_ATTRIBUTES
-#include <linux/n0kz_attributes.h>
-#endif
 
 #include <asm/bug.h>
 #include <asm/memory.h>
@@ -44,6 +41,9 @@
 
 #ifndef __ASSEMBLY__
 
+#ifdef CONFIG_N0KZ_ATTRIBUTES
+#include <linux/n0kz_attributes.h>
+#endif
 #include <asm/cmpxchg.h>
 #include <asm/fixmap.h>
 #include <linux/mmdebug.h>
